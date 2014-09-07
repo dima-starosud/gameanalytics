@@ -1,0 +1,32 @@
+package events
+
+import io.netty.bootstrap.Bootstrap
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.SimpleChannelInboundHandler
+import io.netty.channel.nio.NioEventLoopGroup
+import io.netty.channel.socket.DatagramPacket
+import io.netty.channel.socket.nio.NioDatagramChannel
+import io.netty.util.CharsetUtil
+
+object EventHandler extends SimpleChannelInboundHandler[DatagramPacket] {
+  override def channelRead0(ctx: ChannelHandlerContext, packet: DatagramPacket) {
+    val message = packet.content().toString(CharsetUtil.UTF_8)
+    println(s"!!!!!!!!!! $message")
+  }
+}
+
+object Receiver {
+  val PORT = 4263
+  val group = new NioEventLoopGroup()
+
+  try {
+    new Bootstrap()
+      .group(group)
+      .channel(classOf[NioDatagramChannel])
+      .handler(EventHandler)
+      .bind(PORT).sync().channel().closeFuture().await()
+  } finally {
+    println("Bye!")
+    group.shutdownGracefully();
+  }
+}
